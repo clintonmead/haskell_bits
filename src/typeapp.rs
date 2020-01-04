@@ -1,5 +1,4 @@
 use crate::*;
-use is_type::Is;
 
 pub struct Ref {}
 pub struct Val {}
@@ -8,7 +7,7 @@ pub trait TypeAppParam {
     type Param;
 }
 
-pub trait TypeApp<TCon, T>: Is<Type = <TCon as WithTypeArg<T>>::Type> + TypeAppParam
+pub trait TypeApp<TCon, T>: is_type::Is<Type = <TCon as WithTypeArg<T>>::Type> + TypeAppParam
 where
     TCon: WithTypeArg<T> + ?Sized,
     T: ?Sized,
