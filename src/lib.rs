@@ -1,4 +1,5 @@
 pub mod applicative;
+pub mod ext;
 pub mod functor;
 pub mod impls;
 pub mod mdo;
@@ -6,6 +7,7 @@ pub mod monad;
 pub mod typeapp;
 
 pub use applicative::*;
+pub use ext::*;
 pub use functor::*;
 pub use impls::*;
 pub use mdo::*;

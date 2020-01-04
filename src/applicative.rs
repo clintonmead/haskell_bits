@@ -27,45 +27,6 @@ where
     Is::from_val(lift::<TCon, T>(Is::from_val(x)))
 }
 
-pub trait ApplicativeExt {
-    // x.lift()
-    fn lift<TCon>(self) -> <TCon as WithTypeArg<Self>>::Type
-    where
-        TCon: Lift + WithTypeArg<Self>,
-        Self: Sized,
-    {
-        lift::<TCon, Self>(self)
-    }
-
-    // f.lap(x)
-    fn lap<TCon, TIn, TOut, TFunc>(
-        self,
-        x: impl TypeApp<TCon, TIn>,
-    ) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        Self: Sized + TypeApp<TCon, TFunc>,
-        TCon: LinearApplicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut>,
-        TFunc: Fn(TIn) -> TOut,
-    {
-        <TCon as LinearApplicative>::lap::<TIn, TOut, TFunc>(self.into_val(), x.into_val())
-    }
-
-    // f.ap(x)
-    fn ap<TCon, TIn, TOut, TFunc>(
-        self: &Self,
-        x: &impl TypeApp<TCon, TIn>,
-    ) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        Self: TypeApp<TCon, TFunc>,
-        TCon: Applicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut>,
-        TFunc: Fn(&TIn) -> TOut,
-    {
-        <TCon as Applicative>::ap::<TIn, TOut, TFunc>(self.into_ref(), x.into_ref())
-    }
-}
-
-impl<T> ApplicativeExt for T {}
-
 pub trait LinearApplicative: Lift {
     fn lap<TIn, TOut, TFunc>(
         f: <Self as WithTypeArg<TFunc>>::Type,
