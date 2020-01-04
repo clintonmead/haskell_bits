@@ -26,7 +26,7 @@ This is one of the key things that makes Monads and associated concepts, and mor
 
 Here is a simple Haskell function:
 
-```
+```hs
 monadic_pair :: Monad m => m a -> m a -> m (a, a)
 monadic_pair x y = do
     x_val <- x
@@ -36,7 +36,7 @@ monadic_pair x y = do
 
 And this is the equivalent using this library in Rust:
 
-```
+```rs
 fn monadic_pair<TCon, T, TArg>(x: &TArg, y: &TArg) -> <TCon as WithTypeArg<(T, T)>>::Type
 where
     TCon: Monad + WithTypeArg<T> + WithTypeArg<(T, T)>,
@@ -53,7 +53,7 @@ where
 
 We can then apply this to vectors:
 
-```
+```rs
 let v1: Vec<u32> = vec![1, 2, 3];
 let v2: Vec<u32> = vec![4, 5, 6];        
 let v_result = monadic_pair(&v1, &v2);
@@ -76,7 +76,7 @@ assert_eq!(
 
 Or options:
 
-```
+```rs
 let o1: Option<u32> = Some(1);
 let o2: Option<u32> = Some(2);
 let o3: Option<u32> = None;
@@ -92,7 +92,7 @@ All with the expected results.
 
 We can even do the standard applicative style function application:
 
-```
+```rs
 let _applicative_option_result = (|x| move |y| x + y).lmap(o1).lap(o2);
 assert_eq!(Some(3), _applicative_option_result);
 ```
@@ -105,7 +105,7 @@ Rust does not have higher kinded types, well at least ones we can abstract over.
 
 This has some particular consequences. Lets say we want to write a trait in Rust that encapsulates the idea of applying a function to all parts of a structure. We might try:
 
-```
+```rs
 trait Mapable {
   map<TIn, TOut>(f: impl Func<TIn, TOut>, x: Self<TIn>) -> Self<TOut>;
 }
@@ -127,7 +127,7 @@ Except we can't do this. Rust will refuse to compile this, because `Vec`, `Optio
 
 So we need to do a trick:
 
-```
+```rs
 pub trait WithTypeArg<T>
 {
     type Type;
@@ -136,7 +136,7 @@ pub trait WithTypeArg<T>
 
 And then:
 
-```
+```rs
 pub struct VecTypeCon;
 
 impl<T> WithTypeArg<T> for VecTypeCon {
@@ -146,7 +146,7 @@ impl<T> WithTypeArg<T> for VecTypeCon {
 
 We can then define `Mapable` like so:
 
-```
+```rs
 pub trait Mapable {
     fn map<TIn, TOut>(
         f: impl Fn(TIn) -> TOut,
@@ -157,7 +157,7 @@ pub trait Mapable {
 
 And here's a simple implementation for `Option`s:
 
-```
+```rs
 impl Mapable for VecTypeCon {
     fn lmap<TIn, TOut>(
         f: impl Fn(TIn) -> TOut,
@@ -170,7 +170,7 @@ impl Mapable for VecTypeCon {
 
 and for `Vec`s:
 
-```
+```rs
 impl Mapable for VecTypeCon {
     fn map<TIn, TOut>(
         f: impl Fn(TIn) -> TOut,
@@ -192,7 +192,7 @@ Notice the main motivation for this library is to be able to combine these funct
 
 Well lets make a silly function, that just does two maps in a row (this is a silly function as it would be more efficient just to combine the functions, but lets go with it):
 
-```
+```rs
 fn map2<TCon, TIn, TMid, TOut>(
     f: impl Fn(TIn) -> TMid,
     g: impl Fn(TMid) -> TOut,
@@ -207,7 +207,7 @@ The unfortunately doesn't work, even though it looks quite type correct. I think
 
 So what we do is adjust our definition of `WithTypeArg`
 
-```
+```rs
 pub trait WithTypeArg<T> {
     type Type: TypeApp<Self, T>;
 }
@@ -215,7 +215,7 @@ pub trait WithTypeArg<T> {
 
 And write this new trait `TypeApp`:
 
-```
+```rs
 pub trait TypeApp<TCon, T>
 where
     TCon: WithTypeArg<T>,
@@ -237,7 +237,7 @@ with:
 `impl TypeApp<TCon, T>`
 
 
-```
+```rs
 pub trait Mapable {
     fn map<TIn, TOut>(
         f: impl Fn(TIn) -> TOut,
@@ -248,7 +248,7 @@ pub trait Mapable {
 
 and likewise change `map2`:
 
-```
+```rs
 fn map2<TCon, TIn, TMid, TOut>(
     f: impl Fn(TIn) -> TMid,
     g: impl Fn(TMid) -> TOut,
@@ -297,7 +297,7 @@ Also all trait functions also have plain old top level functions that call them,
 
 I'm going to give the `LinearFunctor` trait as an example. You've seen code similar to this before, but this is the actual code:
 
-```
+```rs
 // Implement this trait for LinearFunctor
 pub trait LinearFunctor {
     fn lmap<TIn, TOut>(
@@ -357,7 +357,7 @@ There's a few little quirks one gets from this approch, which makes things sligh
 
 When writing generic functions over Functors, Applicatives or Monads, one has to use the constraint `WithTypeArg` all over the place. Indeed the function `map2` above doesn't actually work, one needs to write it like this:
 
-```
+```rs
     fn lmap2<TIn, TMid, TOut, TCon>(
         f: impl Fn(TIn) -> TMid,
         g: impl Fn(TMid) -> TOut,
@@ -376,7 +376,7 @@ Notice all the `WithTypeArg<TIn> + WithTypeArg<TMid> + WithTypeArg<TOut>` constr
 
 In stable rust, closure types can't be named, nor (as far as I could work out) can one define types that implement `Fn` (I think this requires extensions). This comes into play when trying to define some functions. For example, consider the definition of `Applicative`:
 
-```
+```rs
 pub trait Applicative: Functor + Lift {
     fn ap<TIn, TOut, TFunc>(
         f: &<Self as WithTypeArg<TFunc>>::Type,
@@ -402,13 +402,13 @@ pub trait Applicative: Functor + Lift {
 
 We've defined `ap` in terms of `lift2`, but it would be nice to define it the other way around also, so implementers could choose which to implement. Roughly speakking, the [identity](http://hackage.haskell.org/package/base-4.12.0.0/docs/Control-Applicative.html#t:Applicative) is as follows:
 
-```
+```rs
 lift2(f, x, y) = f.fmap(x).ap(y)
 ```
 
 But in Rust, without automatic currying, we'll need something like:
 
-```
+```rs
 lift2(f, x, y) = (|x| |y| f(x,y)).fmap(x).ap(y)
 ```
 
@@ -422,7 +422,7 @@ A practical issue with this is that you can't create say, and M<F>, where F is s
 
 Notice there's actually two `lift()` functions defined (`lift` is just `pure`, but `pure` was a former keyword so I've avoided it).
 
-```
+```rs
 // lift(x)
 pub fn lift<TCon, T>(x: T) -> <TCon as WithTypeArg<T>>::Type
 where
@@ -449,7 +449,7 @@ They both do the same thing, indeed the second just calls the first, but their e
 
 The first doesn't allow the inference to go backwards. For example, if one goes:
 
-```
+```rs
 x: Option<u32> = lift(5);
 ```
 
@@ -457,7 +457,7 @@ then the compiler will not be able to work this out, because `5` could be many d
 
 But if one goes like this:
 
-```
+```rs
 x: Option<u32> = lift_c(5);
 ```
 
@@ -473,7 +473,7 @@ As a result also, there's both `!mdo` and `!mdo_c` macros, `!mdo` should be used
 
 One example of this is as follows:
 
-```
+```rs
 let o1: Option<u32> = lift_c(5);
 let o2: Option<u32> = lift_c(7);
 
@@ -488,7 +488,7 @@ Notice here one doesn't have to be explicit about the type constructor of the re
 
 But in `monadic_pair`:
 
-```
+```rs
     fn monadic_pair<TCon, T, TArg>(x: &TArg, y: &TArg) -> <TCon as WithTypeArg<(T, T)>>::Type
     where
         TCon: Monad + WithTypeArg<T> + WithTypeArg<(T, T)>,
@@ -517,7 +517,7 @@ An actual implementation and syntax for higher kinded types would be ideal, as w
 
 If we could define something like:
 
-```
+```rs
 trait TypeCon<TCon> where TCon : forall U. WithTypeArg<U> 
 ```
 
