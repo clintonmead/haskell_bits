@@ -17,10 +17,7 @@ impl Functor for OptionTypeCon {
         f: impl Fn(&TIn) -> TOut,
         x: &<OptionTypeCon as WithTypeArg<TIn>>::Type,
     ) -> <OptionTypeCon as WithTypeArg<TOut>>::Type {
-        match x {
-            None => None,
-            Some(y) => Some(f(y)),
-        }
+        Option::map(x.as_ref(), f)
     }
 }
 
@@ -47,10 +44,7 @@ impl Applicative for OptionTypeCon {
     where
         TFunc: Fn(&TIn) -> TOut,
     {
-        match f {
-            None => None,
-            Some(f_val) => fmap(f_val, x),
-        }
+        f.as_ref().and_then(|f_val| fmap(f_val, x))
     }
 
     fn lift2<TIn1, TIn2, TOut, TFunc>(
@@ -61,13 +55,7 @@ impl Applicative for OptionTypeCon {
     where
         TFunc: Fn(&TIn1, &TIn2) -> TOut,
     {
-        match x1 {
-            None => None,
-            Some(x1_val) => match x2 {
-                None => None,
-                Some(x2_val) => Some(f(x1_val, x2_val)),
-            },
-        }
+        x1.as_ref().and_then(|x1_val| x2.as_ref().map(|x2_val| f(x1_val, x2_val)))
     }
 }
 
@@ -79,13 +67,7 @@ impl LinearApplicative for OptionTypeCon {
     where
         TFunc: FnOnce(TIn) -> TOut,
     {
-        match f {
-            None => None,
-            Some(f_val) => match x {
-                None => None,
-                Some(x_val) => Some(f_val(x_val))
-            }
-        }
+        f.and_then(|f_val| x.map(|x_val| f_val(x_val)))
     }
 
     fn llift2<TIn1, TIn2, TOut, TFunc>(
@@ -96,13 +78,7 @@ impl LinearApplicative for OptionTypeCon {
     where
         TFunc: FnOnce(TIn1, TIn2) -> TOut,
     {
-        match x1 {
-            None => None,
-            Some(x1val) => match x2 {
-                None => None,
-                Some(x2val) => Some(f(x1val, x2val)),
-            },
-        }
+        x1.and_then(|x1val| x2.map(|x2val| f(x1val, x2val)))
     }
 }
 
@@ -112,11 +88,8 @@ impl Monad for OptionTypeCon {
         f: TFuncArg,
     ) -> <OptionTypeCon as WithTypeArg<TOut>>::Type
     where
-        TFuncArg: Fn(&TIn) -> <OptionTypeCon as WithTypeArg<TOut>>::Type
-        {
-            match x {
-                None => None,
-                Some(x_val) => f(x_val)
-            }
-        }
+        TFuncArg: Fn(&TIn) -> <OptionTypeCon as WithTypeArg<TOut>>::Type,
+    {
+        x.as_ref().and_then(f)
+    }
 }

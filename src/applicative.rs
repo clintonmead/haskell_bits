@@ -18,7 +18,6 @@ where
     <TCon as Lift>::lift::<T>(x)
 }
 
-
 // lift_c(x)
 pub fn lift_c<TCon, T, U>(x: U::Param) -> U
 where

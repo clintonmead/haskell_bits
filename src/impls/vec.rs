@@ -17,29 +17,16 @@ impl Functor for VecTypeCon {
         f: impl Fn(&TIn) -> TOut,
         x: &<VecTypeCon as WithTypeArg<TIn>>::Type,
     ) -> <VecTypeCon as WithTypeArg<TOut>>::Type {
-        let size = x.capacity();
-        let mut v: Vec<TOut> = Vec::with_capacity(size);
-        for e in x {
-            v.push(f(e));
-        }
-        v
+        x.iter().map(f).collect()
     }
 }
 
-// This looks the same as the non-linear version but the for-loop here
-// actually the for loop here is taking elements out of the original vector
-// by value
 impl LinearFunctor for VecTypeCon {
     fn lmap<TIn, TOut>(
         f: impl Fn(TIn) -> TOut,
         x: <VecTypeCon as WithTypeArg<TIn>>::Type,
     ) -> <VecTypeCon as WithTypeArg<TOut>>::Type {
-        let size = x.capacity();
-        let mut v: Vec<TOut> = Vec::with_capacity(size);
-        for e in x {
-            v.push(f(e));
-        }
-        v
+        x.into_iter().map(f).collect()
     }
 }
 
@@ -58,13 +45,7 @@ impl Applicative for VecTypeCon {
     where
         TFunc: Fn(&TIn1, &TIn2) -> TOut,
     {
-        let mut result: Vec<TOut> = Vec::new();
-        for x1_val in x1 {
-            for x2_val in x2 {
-                result.push(f(x1_val, x2_val));
-            }
-        }
-        result
+        x1.iter().flat_map(|x1_val| x2.iter().map(|x2_val| f(x1_val, x2_val)).collect::<Vec<_>>()).collect()
     }
 }
 
@@ -74,12 +55,8 @@ impl Monad for VecTypeCon {
         f: TFuncArg,
     ) -> <Self as WithTypeArg<TOut>>::Type
     where
-        TFuncArg: Fn(&TIn) -> <Self as WithTypeArg<TOut>>::Type {
-            let mut result: Vec<TOut> = Vec::new();
-            for x_val in x {
-                let mut sub_vec = f(x_val);
-                result.append(&mut sub_vec);
-            }
-            result
-        }
+        TFuncArg: Fn(&TIn) -> <Self as WithTypeArg<TOut>>::Type,
+    {
+        x.iter().flat_map(f).collect()
+    }
 }
