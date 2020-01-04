@@ -17,10 +17,6 @@ pub mod mdo;
 #[doc(hidden)]
 pub use mdo::*;
 
-pub trait WithTypeArg<T: ?Sized> {
-    type Type: TypeApp<Self, T>;
-}
-
 #[cfg(test)]
 mod tests {
     use crate::*;

@@ -1,10 +1,9 @@
-use crate::*;
-
-pub struct Ref {}
-pub struct Val {}
-
 pub trait TypeAppParam {
     type Param;
+}
+
+pub trait WithTypeArg<T: ?Sized> {
+    type Type: TypeApp<Self, T>;
 }
 
 pub trait TypeApp<TCon, T>: is_type::Is<Type = <TCon as WithTypeArg<T>>::Type> + TypeAppParam
@@ -13,6 +12,9 @@ where
     T: ?Sized,
 {
 }
+
+pub struct Ref {}
+pub struct Val {}
 
 // This is useful for traits like CallMap where you're not sure whether your impls are either taking
 // reference or value arguments.
