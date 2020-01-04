@@ -33,6 +33,19 @@ where
     <TCon as LinearFunctor>::lmap(f, x.into_val())
 }
 
+// This is for f.lmap(x) syntax
+pub trait LMapExt {
+    fn lmap<TCon, TIn, TOut>(self, x: impl TypeApp<TCon, TIn> + Sized) -> <TCon as WithTypeArg<TOut>>::Type
+    where
+        Self: Fn(TIn) -> TOut + Sized,
+        TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut>
+    {
+        lmap(self, x)
+    }
+}
+
+impl<T> LMapExt for T {}
+
 // And for lmapconst(e, x)
 pub fn lmapconst<TCon, TIn, TOut>(
     e: &TOut,
@@ -93,6 +106,20 @@ where
 {
     TCon::fmap(f, x.into_ref())
 }
+
+// This is for f.fmap(x) syntax
+pub trait FMapExt {
+    fn fmap<TCon, TIn, TOut>(self, x: &impl TypeApp<TCon, TIn>) -> <TCon as WithTypeArg<TOut>>::Type
+    where
+        Self: Fn(&TIn) -> TOut + Sized,
+        TCon: Functor + WithTypeArg<TIn>,
+        TCon: WithTypeArg<TOut>,
+    {
+        fmap(self, x)
+    }
+}
+
+impl<T> FMapExt for T {}
 
 // And for fmapconst(e, x)
 pub fn fmapconst<TCon, TIn, TOut>(

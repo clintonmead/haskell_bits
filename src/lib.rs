@@ -1,18 +1,18 @@
 pub mod applicative;
 pub mod functor;
 pub mod impls;
+pub mod mdo;
+pub mod monad;
 pub mod typeapp;
 pub mod with_type_arg;
-pub mod monad;
-pub mod mdo;
 
 pub use applicative::*;
 pub use functor::*;
 pub use impls::*;
+pub use mdo::*;
+pub use monad::*;
 pub use typeapp::*;
 pub use with_type_arg::*;
-pub use monad::*;
-pub use mdo::*;
 
 #[cfg(test)]
 mod tests {
@@ -29,7 +29,7 @@ mod tests {
 
         let f: fn(&u32) -> u32 = |x| x * 2;
         let g: fn(&u32) -> u32 = |x| x + 3;
-        let h: fn(u32) -> u32 = |x| x * 2;
+        let h: fn(&u32) -> u32 = |x| x * 2;
 
         let test_vec: Vec<u32> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
         let test_option: Option<u32> = Some(42);
@@ -53,12 +53,12 @@ mod tests {
 
         let _o3 = bind(&o1, |x| fmap(|y| x + y, &o1));
 
-        let _o4 : Option<u32> = bind_c(&lift_c(5), |x : &_| lift_c(Clone::clone(x)));
-        let _o5 : Option<u32> = (|x : _| Some(Clone::clone(x)))(&5);
-        
-        let _do_result : Option<(u32, u32)> = mdo_c! {
-            x : u32 =<< o1;            
-            y : u32 =<< o2;
+        let _o4: Option<u32> = bind_c(&lift_c(5), |x: &_| lift_c(Clone::clone(x)));
+        let _o5: Option<u32> = (|x: _| Some(Clone::clone(x)))(&5);
+
+        let _do_result: Option<(u32, u32)> = mdo_c! {
+            x =<< &o1;
+            y =<< &o2;
             ret (Clone::clone(x), Clone::clone(y));
         };
 
@@ -69,37 +69,74 @@ mod tests {
         let o2: Option<u32> = Some(2);
         let o3: Option<u32> = None;
 
-        let v_result = monadic_pair(v1, v2);
-        let o1_result = monadic_pair(o1, o2);
-        let o2_result = monadic_pair(o1, o3);
+        let of: Option<_> = Some(|x: &u32| x.clone());
 
-        assert_eq!(v_result, vec![(1,4),(1,5),(1,6),(2,4),(2,5),(2,6),(3,4),(3,5),(3,6)]);
-        assert_eq!(o1_result, Some((1,2)));
+        let v_result = monadic_pair(&v1, &v2);
+        let o1_result = monadic_pair(&o1, &o2);
+        let o2_result = monadic_pair(&o1, &o3);
+
+        let _applicative_result = (|x: &_| {
+            let z = Clone::clone(x);
+            move |y: &_| z * y
+        })
+        .fmap(&o1)
+        .ap(&o2);
+        let _applicative_option_result = (|x| move |y| x + y).lmap(o1).lap(o2);
+        assert_eq!(Some(3), _applicative_option_result);
+
+        let _ = ap(&of, &o1);
+
+        assert_eq!(
+            v_result,
+            vec![
+                (1, 4),
+                (1, 5),
+                (1, 6),
+                (2, 4),
+                (2, 5),
+                (2, 6),
+                (3, 4),
+                (3, 5),
+                (3, 6)
+            ]
+        );
+        assert_eq!(o1_result, Some((1, 2)));
         assert_eq!(o2_result, None);
     }
 
     fn map2<TIn, TMid, TOut, TCon>(
-        f: impl Fn(TIn) -> TMid,
+        f: impl Fn(&TIn) -> TMid,
         g: impl Fn(&TMid) -> TOut,
         x: &impl TypeApp<TCon, TIn>,
     ) -> <TCon as WithTypeArg<TOut>>::Type
     where
-        TCon: Functor + LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TMid> + WithTypeArg<TOut>,
+        TCon: Functor + WithTypeArg<TIn> + WithTypeArg<TMid> + WithTypeArg<TOut>,
         TIn: Clone,
     {
         map(g, map(f, x))
     }
 
-    fn monadic_pair<TCon, T, TArg>(x : TArg, y : TArg) -> <TCon as WithTypeArg<(T, T)>>::Type 
+    fn _lmap2<TIn, TMid, TOut, TCon>(
+        f: impl Fn(TIn) -> TMid,
+        g: impl Fn(TMid) -> TOut,
+        x: impl TypeApp<TCon, TIn>,
+    ) -> <TCon as WithTypeArg<TOut>>::Type
     where
-        TCon : Monad + WithTypeArg<T> + WithTypeArg<(T, T)>,
-        TArg : TypeApp<TCon, T>,
-        T :  Clone
+        TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TMid> + WithTypeArg<TOut>,
     {
-        mdo!{
+        lmap(g, lmap(f, x))
+    }
+
+    fn monadic_pair<TCon, T, TArg>(x: &TArg, y: &TArg) -> <TCon as WithTypeArg<(T, T)>>::Type
+    where
+        TCon: Monad + WithTypeArg<T> + WithTypeArg<(T, T)>,
+        TArg: TypeApp<TCon, T>,
+        T: Clone,
+    {
+        mdo! {
             x_val =<< x;
             y_val =<< y;
             ret<TCon> (x_val.clone(), y_val.clone());
-        }        
+        }
     }
 }

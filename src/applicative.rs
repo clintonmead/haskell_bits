@@ -43,7 +43,7 @@ pub trait LiftExt {
 
 impl<T> LiftExt for T {}
 
-pub trait LinearApplicative: LinearFunctor + Lift {
+pub trait LinearApplicative: Lift {
     fn lap<TIn, TOut, TFunc>(
         f: <Self as WithTypeArg<TFunc>>::Type,
         x: <Self as WithTypeArg<TIn>>::Type,

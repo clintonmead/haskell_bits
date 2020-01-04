@@ -29,7 +29,7 @@ impl LinearFunctor for OptionTypeCon {
         f: impl Fn(TIn) -> TOut,
         x: <OptionTypeCon as WithTypeArg<TIn>>::Type,
     ) -> <OptionTypeCon as WithTypeArg<TOut>>::Type {
-        x.map(f)
+        Option::map(x, f)
     }
 }
 
