@@ -4,7 +4,6 @@ pub mod impls;
 pub mod mdo;
 pub mod monad;
 pub mod typeapp;
-pub mod with_type_arg;
 
 pub use applicative::*;
 pub use functor::*;
@@ -12,7 +11,10 @@ pub use impls::*;
 pub use mdo::*;
 pub use monad::*;
 pub use typeapp::*;
-pub use with_type_arg::*;
+
+pub trait WithTypeArg<T: ?Sized> {
+    type Type: TypeApp<Self, T>;
+}
 
 #[cfg(test)]
 mod tests {

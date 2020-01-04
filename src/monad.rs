@@ -33,6 +33,97 @@ pub trait Monad: Applicative {
     }
 }
 
+// LinearMonad
+pub trait LinearMonad: LinearApplicative + Lift {
+    fn lbind<TIn, TOut, TFuncArg>(
+        x: <Self as WithTypeArg<TIn>>::Type,
+        f: TFuncArg,
+    ) -> <Self as WithTypeArg<TOut>>::Type
+    where
+        Self: WithTypeArg<TIn> + WithTypeArg<TOut>,
+        TFuncArg: FnOnce(TIn) -> <Self as WithTypeArg<TOut>>::Type;
+
+    fn lbind_ignore<TIn, TOut>(
+        x: <Self as WithTypeArg<TIn>>::Type,
+        y: <Self as WithTypeArg<TOut>>::Type,
+    ) -> <Self as WithTypeArg<TOut>>::Type
+    where
+        Self: WithTypeArg<TIn> + WithTypeArg<TOut>,
+    {
+        <Self as LinearMonad>::lbind::<TIn, TOut, _>(x, |_| y)
+    }
+
+    fn ljoin<T>(
+        x: <Self as WithTypeArg<<Self as WithTypeArg<T>>::Type>>::Type,
+    ) -> <Self as WithTypeArg<T>>::Type
+    where
+        Self: WithTypeArg<T> + WithTypeArg<<Self as WithTypeArg<T>>::Type>,
+    {
+        <Self as LinearMonad>::lbind::<<Self as WithTypeArg<T>>::Type, T, _>(x, |y| y)
+    }
+}
+
+pub trait MonadExt: Sized {
+    fn bind<TCon, TIn, TOut, TFuncArg, U>(&self, f: TFuncArg) -> U
+    where
+        TCon: Monad + WithTypeArg<TIn> + WithTypeArg<TOut>,
+        TFuncArg: Fn(&TIn) -> U,
+        U: TypeApp<TCon, TOut>,
+        Self: TypeApp<TCon, TIn>,
+    {
+        bind(self, f)
+    }
+
+    fn bind_ignore<TCon, TIn, TOut, U>(&self, y: &U) -> U
+    where
+        U: TypeApp<TCon, TOut>,
+        Self: TypeApp<TCon, TIn>,
+        TCon: Monad + WithTypeArg<TIn> + WithTypeArg<TOut>,
+        <TCon as WithTypeArg<TOut>>::Type: Clone,
+    {
+        bind_ignore(self, y)
+    }
+
+    fn join<TCon, T, TInner>(&self) -> <TCon as WithTypeArg<T>>::Type
+    where
+        Self: TypeApp<TCon, TInner>,
+        TInner: TypeApp<TCon, T>,
+        TCon: Monad
+            + WithTypeArg<T>
+            + WithTypeArg<TInner>
+            + WithTypeArg<<TCon as WithTypeArg<T>>::Type>,
+        <TCon as WithTypeArg<T>>::Type: Clone,
+    {
+        join(self)
+    }
+
+    fn lbind<TCon, TIn, TOut, TFuncArg, TFuncOut>(
+        self,
+        f: TFuncArg,
+    ) -> <TCon as WithTypeArg<TOut>>::Type
+    where
+        TCon: LinearMonad + WithTypeArg<TIn> + WithTypeArg<TOut>,
+        TFuncArg: FnOnce(TIn) -> TFuncOut,
+        TFuncOut: TypeApp<TCon, TOut>,
+        Self: TypeApp<TCon, TIn>,
+    {
+        lbind(self, f)
+    }
+
+    fn lbind_ignore<TCon, TIn, TOut>(
+        self,
+        y: impl TypeApp<TCon, TOut>,
+    ) -> <TCon as WithTypeArg<TOut>>::Type
+    where
+        Self: TypeApp<TCon, TIn>,
+        TCon: LinearMonad + WithTypeArg<TIn> + WithTypeArg<TOut>,
+    {
+        lbind_ignore(self, y)
+    }
+}
+
+impl<X: Sized> MonadExt for X {}
+
 // bind(x, f)
 pub fn bind<TCon, TIn, TOut, TArg, TFuncArg, U>(x: &TArg, f: TFuncArg) -> U
 where
@@ -56,21 +147,6 @@ where
     bind(Is::into_ref(x), f)
 }
 
-// x.bind(f)
-pub trait BindExt {
-    fn bind<TCon, TIn, TOut, TFuncArg, U>(x: &Self, f: TFuncArg) -> U
-    where
-        TCon: Monad + WithTypeArg<TIn> + WithTypeArg<TOut>,
-        TFuncArg: Fn(&TIn) -> U,
-        U: TypeApp<TCon, TOut>,
-        Self: TypeApp<TCon, TIn> + Sized,
-    {
-        bind(x, f)
-    }
-}
-
-impl<X> BindExt for X {}
-
 // bind_ignore(x, y)
 pub fn bind_ignore<TCon, TIn, TOut, U>(x: &impl TypeApp<TCon, TIn>, y: &U) -> U
 where
@@ -82,19 +158,6 @@ where
         x.into_ref(),
         y.into_ref(),
     ))
-}
-
-// x.bind_ignore(f)
-pub trait BindIgnoreExt {
-    fn bind_ignore<TCon, TIn, TOut, U>(x: &Self, y: &U) -> U
-    where
-        U: TypeApp<TCon, TOut>,
-        Self: TypeApp<TCon, TIn> + Sized,
-        TCon: Monad + WithTypeArg<TIn> + WithTypeArg<TOut>,
-        <TCon as WithTypeArg<TOut>>::Type: Clone,
-    {
-        bind_ignore(x, y)
-    }
 }
 
 // join(x)
@@ -127,7 +190,7 @@ where
     TCon: Functor
         + WithTypeArg<T>
         + WithTypeArg<TInner>
-        + WithTypeArg<<TCon as with_type_arg::WithTypeArg<T>>::Type>,
+        + WithTypeArg<<TCon as WithTypeArg<T>>::Type>,
     TInner: TypeApp<TCon, T>,
 {
     unsafe { std::mem::transmute(x) }
@@ -143,53 +206,6 @@ where
     <TCon as Monad>::join::<T>(into_functor_ref::<TCon, T, TInner>(x.into_ref()))
 }
 
-// x.join()
-pub trait JoinExt {
-    fn join<TCon, T, TInner>(x: &Self) -> <TCon as WithTypeArg<T>>::Type
-    where
-        Self: TypeApp<TCon, TInner> + Sized,
-        TInner: TypeApp<TCon, T>,
-        TCon: Monad
-            + WithTypeArg<T>
-            + WithTypeArg<TInner>
-            + WithTypeArg<<TCon as WithTypeArg<T>>::Type>,
-        <TCon as WithTypeArg<T>>::Type: Clone,
-    {
-        join(x)
-    }
-}
-
-impl<X> JoinExt for X {}
-// LinearMonad
-pub trait LinearMonad: LinearApplicative + Lift {
-    fn lbind<TIn, TOut, TFuncArg>(
-        x: <Self as WithTypeArg<TIn>>::Type,
-        f: TFuncArg,
-    ) -> <Self as WithTypeArg<TOut>>::Type
-    where
-        Self: WithTypeArg<TIn> + WithTypeArg<TOut>,
-        TFuncArg: FnOnce(TIn) -> <Self as WithTypeArg<TOut>>::Type;
-
-    fn lbind_ignore<TIn, TOut>(
-        x: <Self as WithTypeArg<TIn>>::Type,
-        y: <Self as WithTypeArg<TOut>>::Type,
-    ) -> <Self as WithTypeArg<TOut>>::Type
-    where
-        Self: WithTypeArg<TIn> + WithTypeArg<TOut>,
-    {
-        <Self as LinearMonad>::lbind::<TIn, TOut, _>(x, |_| y)
-    }
-
-    fn ljoin<T>(
-        x: <Self as WithTypeArg<<Self as WithTypeArg<T>>::Type>>::Type,
-    ) -> <Self as WithTypeArg<T>>::Type
-    where
-        Self: WithTypeArg<T> + WithTypeArg<<Self as WithTypeArg<T>>::Type>,
-    {
-        <Self as LinearMonad>::lbind::<<Self as WithTypeArg<T>>::Type, T, _>(x, |y| y)
-    }
-}
-
 // lbind(x, f)
 pub fn lbind<TCon, TIn, TOut, TFuncArg, TFuncOut>(
     x: impl TypeApp<TCon, TIn>,
@@ -203,23 +219,6 @@ where
     <TCon as LinearMonad>::lbind::<TIn, TOut, _>(x.into_val(), |y| f(y).into_val())
 }
 
-// x.lbind(f)
-pub trait LBindExt {
-    fn lbind<TCon, TIn, TOut, TFuncArg, TFuncOut>(
-        x: Self,
-        f: TFuncArg,
-    ) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        TCon: LinearMonad + WithTypeArg<TIn> + WithTypeArg<TOut>,
-        TFuncArg: FnOnce(TIn) -> TFuncOut,
-        TFuncOut: TypeApp<TCon, TOut>,
-        Self: TypeApp<TCon, TIn> + Sized,
-    {
-        lbind(x, f)
-    }
-}
-
-impl<X> LBindExt for X {}
 // lbind_ignore(x, y)
 pub fn lbind_ignore<TCon, TIn, TOut>(
     x: impl TypeApp<TCon, TIn>,
@@ -230,19 +229,3 @@ where
 {
     <TCon as LinearMonad>::lbind_ignore::<TIn, TOut>(x.into_val(), y.into_val())
 }
-
-// x.lbind_ignore(f)
-pub trait LBindIgnoreExt {
-    fn lbind_ignore<TCon, TIn, TOut>(
-        x: Self,
-        y: impl TypeApp<TCon, TOut>,
-    ) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        Self: TypeApp<TCon, TIn> + Sized,
-        TCon: LinearMonad + WithTypeArg<TIn> + WithTypeArg<TOut>,
-    {
-        lbind_ignore(x, y)
-    }
-}
-
-impl<X> LBindIgnoreExt for X {}

@@ -8,10 +8,9 @@ pub trait TypeAppParam {
     type Param;
 }
 
-pub trait TypeApp<TCon, T>
+pub trait TypeApp<TCon, T>: Is<Type = <TCon as WithTypeArg<T>>::Type> + TypeAppParam
 where
     TCon: WithTypeArg<T> + ?Sized,
-    Self: Is<Type = <TCon as WithTypeArg<T>>::Type> + TypeAppParam,
     T: ?Sized,
 {
 }

@@ -21,59 +21,6 @@ pub trait LinearFunctor {
     }
 }
 
-// Call this for lmap(f, x) syntax
-pub fn lmap<TCon, TIn, TOut>(
-    f: impl Fn(TIn) -> TOut,
-    x: impl TypeApp<TCon, TIn>,
-) -> <TCon as WithTypeArg<TOut>>::Type
-where
-    TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
-{
-    <TCon as LinearFunctor>::lmap(f, x.into_val())
-}
-
-// This is for f.lmap(x) syntax
-pub trait LMapExt {
-    fn lmap<TCon, TIn, TOut>(
-        self,
-        x: impl TypeApp<TCon, TIn> + Sized,
-    ) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        Self: Fn(TIn) -> TOut + Sized,
-        TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut>,
-    {
-        lmap(self, x)
-    }
-}
-
-impl<T> LMapExt for T {}
-
-// And for lmapconst(e, x)
-pub fn lmapconst<TCon, TIn, TOut>(
-    e: &TOut,
-    x: impl TypeApp<TCon, TIn>,
-) -> <TCon as WithTypeArg<TOut>>::Type
-where
-    TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut>,
-    TOut: Clone,
-{
-    <TCon as LinearFunctor>::lmapconst::<TIn, TOut>(e, x.into_val())
-}
-
-// This is for x.lmapop(f) syntax
-pub trait LMapOpExt {
-    fn lmapop<TCon, TIn, TOut>(self, f: impl Fn(TIn) -> TOut) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        Self: TypeApp<TCon, TIn> + Sized,
-        TCon: LinearFunctor + WithTypeArg<TIn>,
-        TCon: WithTypeArg<TOut>,
-    {
-        lmap(f, self)
-    }
-}
-
-impl<T> LMapOpExt for T {}
-
 // Implement this trait for Functor
 pub trait Functor: LinearFunctor {
     fn fmap<TIn, TOut>(
@@ -95,6 +42,75 @@ pub trait Functor: LinearFunctor {
     }
 }
 
+pub trait XMapExt {
+    // This is for f.lmap(x) syntax
+    fn lmap<TCon, TIn, TOut>(
+        self,
+        x: impl TypeApp<TCon, TIn> + Sized,
+    ) -> <TCon as WithTypeArg<TOut>>::Type
+    where
+        Self: Fn(TIn) -> TOut + Sized,
+        TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut>,
+    {
+        lmap(self, x)
+    }
+
+    // This is for x.lmapop(f) syntax
+    fn lmapop<TCon, TIn, TOut>(self, f: impl Fn(TIn) -> TOut) -> <TCon as WithTypeArg<TOut>>::Type
+    where
+        Self: TypeApp<TCon, TIn> + Sized,
+        TCon: LinearFunctor + WithTypeArg<TIn>,
+        TCon: WithTypeArg<TOut>,
+    {
+        lmap(f, self)
+    }
+
+    // This is for f.fmap(x) syntax
+    fn fmap<TCon, TIn, TOut>(self, x: &impl TypeApp<TCon, TIn>) -> <TCon as WithTypeArg<TOut>>::Type
+    where
+        Self: Fn(&TIn) -> TOut + Sized,
+        TCon: Functor + WithTypeArg<TIn>,
+        TCon: WithTypeArg<TOut>,
+    {
+        fmap(self, x)
+    }
+
+    // This is for x.fmapop(f) syntax
+    fn fmapop<TCon, TIn, TOut>(&self, f: impl Fn(&TIn) -> TOut) -> <TCon as WithTypeArg<TOut>>::Type
+    where
+        Self: TypeApp<TCon, TIn> + Sized,
+        TCon: Functor + WithTypeArg<TIn>,
+        TCon: WithTypeArg<TOut>,
+    {
+        fmap(f, self)
+    }
+}
+
+impl<T> XMapExt for T {}
+
+// Call this for lmap(f, x) syntax
+pub fn lmap<TCon, TIn, TOut>(
+    f: impl Fn(TIn) -> TOut,
+    x: impl TypeApp<TCon, TIn>,
+) -> <TCon as WithTypeArg<TOut>>::Type
+where
+    TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
+{
+    <TCon as LinearFunctor>::lmap(f, x.into_val())
+}
+
+// And for lmapconst(e, x)
+pub fn lmapconst<TCon, TIn, TOut>(
+    e: &TOut,
+    x: impl TypeApp<TCon, TIn>,
+) -> <TCon as WithTypeArg<TOut>>::Type
+where
+    TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut>,
+    TOut: Clone,
+{
+    <TCon as LinearFunctor>::lmapconst::<TIn, TOut>(e, x.into_val())
+}
+
 // Call this for fmap(f, x) syntax
 pub fn fmap<TCon, TIn, TOut, TFunc, TParam>(
     f: TFunc,
@@ -108,20 +124,6 @@ where
     TCon::fmap(f, x.into_ref())
 }
 
-// This is for f.fmap(x) syntax
-pub trait FMapExt {
-    fn fmap<TCon, TIn, TOut>(self, x: &impl TypeApp<TCon, TIn>) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        Self: Fn(&TIn) -> TOut + Sized,
-        TCon: Functor + WithTypeArg<TIn>,
-        TCon: WithTypeArg<TOut>,
-    {
-        fmap(self, x)
-    }
-}
-
-impl<T> FMapExt for T {}
-
 // And for fmapconst(e, x)
 pub fn fmapconst<TCon, TIn, TOut>(
     e: &TOut,
@@ -133,20 +135,6 @@ where
 {
     TCon::fmapconst::<TIn, TOut>(e, x.into_ref())
 }
-
-// This is for x.fmapop(f) syntax
-pub trait FMapOpExt {
-    fn fmapop<TCon, TIn, TOut>(&self, f: impl Fn(&TIn) -> TOut) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        Self: TypeApp<TCon, TIn> + Sized,
-        TCon: Functor + WithTypeArg<TIn>,
-        TCon: WithTypeArg<TOut>,
-    {
-        fmap(f, self)
-    }
-}
-
-impl<T> FMapOpExt for T {}
 
 // This allows you to make a x.map(f) call which will work which will call either
 // fmap or lmap depending on the arguments
