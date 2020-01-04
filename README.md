@@ -1,6 +1,6 @@
 # haskell_bits
 
-Various typeclasses and concepts from Haskell, implemented in Rust.
+Various typeclasses and concepts from Haskell, implemented in Rust. ([crates.io link](https://crates.io/crates/haskell_bits))
 
 ## Synopsis
 
