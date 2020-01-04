@@ -535,7 +535,12 @@ There's a few obvious things to be done, firstly implementing Functor/Applicativ
 
 Also, some of the more useful monadic functions, like [`mapM`](http://hackage.haskell.org/package/base-4.12.0.0/docs/Control-Monad.html#v:mapM) require [traversable](http://hackage.haskell.org/package/base-4.12.0.0/docs/Data-Traversable.html#t:Traversable) and [foldable](http://hackage.haskell.org/package/base-4.12.0.0/docs/Data-Foldable.html#t:Foldable), so these are the obvious traits to implement next.
 
-## Discussion welcome!
+## Where to start digging around the code.
 
-The whole point of this was to open up discussion, so please feel free to open up a github issue if you have any suggestions or even open up a PR if those changes are more concrete or would just like to add some functions, traits or implementations.
+There's a whole lot of test code dumped in the `test()` function in [`lib.rs`](https://github.com/clintonmead/haskell_bits/blob/master/src/lib.rs), that's probably the best place to start as there's plenty of examples of usage there. 
+
+## Discussion and comments welcome!
+
+The whole point of this was to open up discussion, particularly on core aspects of the design at this point, so please feel free to open up a github issue if you have any suggestions. Or even open up a PR if those changes are more concrete or would just like to add some functions, traits or implementations.
+
 
