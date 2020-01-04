@@ -5,7 +5,7 @@ authors = ["Clinton <clintonmead@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/clintonmead/haskell_bits"
 description = "Rust implementations of various Haskell typeclasses and functions"
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
-is_type = { version = "0.2.0" }
+is_type = "0.2"
