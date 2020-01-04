@@ -1,5 +1,5 @@
-pub mod option;
-pub mod vec;
+mod option;
+mod vec;
 
-pub use option::*;
-pub use vec::*;
+pub use option::TypeCon as OptionTypeCon;
+pub use vec::TypeCon as VecTypeCon;

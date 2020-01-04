@@ -1,46 +1,46 @@
 use crate::*;
 
-pub struct OptionTypeCon;
+pub struct TypeCon;
 
 impl<T> TypeAppParam for Option<T> {
     type Param = T;
 }
 
-impl<T> TypeApp<OptionTypeCon, T> for Option<T> {}
+impl<T> TypeApp<TypeCon, T> for Option<T> {}
 
-impl<T> WithTypeArg<T> for OptionTypeCon {
+impl<T> WithTypeArg<T> for TypeCon {
     type Type = Option<T>;
 }
 
-impl Functor for OptionTypeCon {
+impl Functor for TypeCon {
     fn fmap<TIn, TOut>(
         f: impl Fn(&TIn) -> TOut,
-        x: &<OptionTypeCon as WithTypeArg<TIn>>::Type,
-    ) -> <OptionTypeCon as WithTypeArg<TOut>>::Type {
+        x: &<TypeCon as WithTypeArg<TIn>>::Type,
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type {
         Option::map(x.as_ref(), f)
     }
 }
 
-impl LinearFunctor for OptionTypeCon {
+impl LinearFunctor for TypeCon {
     fn lmap<TIn, TOut>(
         f: impl Fn(TIn) -> TOut,
-        x: <OptionTypeCon as WithTypeArg<TIn>>::Type,
-    ) -> <OptionTypeCon as WithTypeArg<TOut>>::Type {
+        x: <TypeCon as WithTypeArg<TIn>>::Type,
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type {
         Option::map(x, f)
     }
 }
 
-impl Lift for OptionTypeCon {
-    fn lift<T>(x: T) -> <OptionTypeCon as WithTypeArg<T>>::Type {
+impl Lift for TypeCon {
+    fn lift<T>(x: T) -> <TypeCon as WithTypeArg<T>>::Type {
         From::from(x)
     }
 }
 
-impl Applicative for OptionTypeCon {
+impl Applicative for TypeCon {
     fn ap<TIn, TOut, TFunc>(
-        f: &<OptionTypeCon as WithTypeArg<TFunc>>::Type,
-        x: &<OptionTypeCon as WithTypeArg<TIn>>::Type,
-    ) -> <OptionTypeCon as WithTypeArg<TOut>>::Type
+        f: &<TypeCon as WithTypeArg<TFunc>>::Type,
+        x: &<TypeCon as WithTypeArg<TIn>>::Type,
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type
     where
         TFunc: Fn(&TIn) -> TOut,
     {
@@ -60,11 +60,11 @@ impl Applicative for OptionTypeCon {
     }
 }
 
-impl LinearApplicative for OptionTypeCon {
+impl LinearApplicative for TypeCon {
     fn lap<TIn, TOut, TFunc>(
-        f: <OptionTypeCon as WithTypeArg<TFunc>>::Type,
-        x: <OptionTypeCon as WithTypeArg<TIn>>::Type,
-    ) -> <OptionTypeCon as WithTypeArg<TOut>>::Type
+        f: <TypeCon as WithTypeArg<TFunc>>::Type,
+        x: <TypeCon as WithTypeArg<TIn>>::Type,
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type
     where
         TFunc: FnOnce(TIn) -> TOut,
     {
@@ -73,9 +73,9 @@ impl LinearApplicative for OptionTypeCon {
 
     fn llift2<TIn1, TIn2, TOut, TFunc>(
         f: TFunc,
-        x1: <OptionTypeCon as WithTypeArg<TIn1>>::Type,
-        x2: <OptionTypeCon as WithTypeArg<TIn2>>::Type,
-    ) -> <OptionTypeCon as WithTypeArg<TOut>>::Type
+        x1: <TypeCon as WithTypeArg<TIn1>>::Type,
+        x2: <TypeCon as WithTypeArg<TIn2>>::Type,
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type
     where
         TFunc: FnOnce(TIn1, TIn2) -> TOut,
     {
@@ -83,13 +83,13 @@ impl LinearApplicative for OptionTypeCon {
     }
 }
 
-impl Monad for OptionTypeCon {
+impl Monad for TypeCon {
     fn bind<TIn, TOut, TFuncArg>(
-        x: &<OptionTypeCon as WithTypeArg<TIn>>::Type,
+        x: &<TypeCon as WithTypeArg<TIn>>::Type,
         f: TFuncArg,
-    ) -> <OptionTypeCon as WithTypeArg<TOut>>::Type
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type
     where
-        TFuncArg: Fn(&TIn) -> <OptionTypeCon as WithTypeArg<TOut>>::Type,
+        TFuncArg: Fn(&TIn) -> <TypeCon as WithTypeArg<TOut>>::Type,
     {
         x.as_ref().and_then(f)
     }
