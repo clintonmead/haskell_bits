@@ -1,4 +1,4 @@
-// Largely stolen from: 
+// Largely stolen from:
 // https://github.com/TeXitoi/rust-mdo/blob/master/src/lib.rs
 
 #[macro_export]
@@ -84,4 +84,3 @@ macro_rules! mdo_c {
         lift_c($e)
     );
 }
-

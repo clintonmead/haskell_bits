@@ -12,7 +12,7 @@ pub trait Lift {
 // lift(x)
 pub fn lift<TCon, T>(x: T) -> <TCon as WithTypeArg<T>>::Type
 where
-    <TCon as WithTypeArg<T>>::Type : TypeApp<TCon, T>,
+    <TCon as WithTypeArg<T>>::Type: TypeApp<TCon, T>,
     TCon: Lift + WithTypeArg<T>,
 {
     <TCon as Lift>::lift::<T>(x)
@@ -21,9 +21,9 @@ where
 // lift_c(x)
 pub fn lift_c<TCon, T, U>(x: U::Param) -> U
 where
-    T : Is<Type = U::Param>,
-    U : TypeApp<TCon, T>,
-    <TCon as WithTypeArg<T>>::Type : TypeApp<TCon, T>,
+    T: Is<Type = U::Param>,
+    U: TypeApp<TCon, T>,
+    <TCon as WithTypeArg<T>>::Type: TypeApp<TCon, T>,
     TCon: Lift + WithTypeArg<T>,
 {
     Is::from_val(lift::<TCon, T>(Is::from_val(x)))

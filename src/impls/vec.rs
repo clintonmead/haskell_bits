@@ -45,7 +45,13 @@ impl Applicative for VecTypeCon {
     where
         TFunc: Fn(&TIn1, &TIn2) -> TOut,
     {
-        x1.iter().flat_map(|x1_val| x2.iter().map(|x2_val| f(x1_val, x2_val)).collect::<Vec<_>>()).collect()
+        x1.iter()
+            .flat_map(|x1_val| {
+                x2.iter()
+                    .map(|x2_val| f(x1_val, x2_val))
+                    .collect::<Vec<_>>()
+            })
+            .collect()
     }
 }
 

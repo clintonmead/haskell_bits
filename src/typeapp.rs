@@ -23,7 +23,7 @@ pub trait TypeAppMaybeRef<TCon, T, RefT>
 where
     TCon: WithTypeArg<T> + ?Sized,
     T: ?Sized,
-    RefT: ?Sized
+    RefT: ?Sized,
 {
 }
 
@@ -31,7 +31,7 @@ impl<TCon, T, TCollection> TypeAppMaybeRef<TCon, T, Val> for TCollection
 where
     TCollection: TypeApp<TCon, T>,
     TCon: WithTypeArg<T> + ?Sized,
-    T: ?Sized
+    T: ?Sized,
 {
 }
 
@@ -39,6 +39,6 @@ impl<TCon, T, TCollection> TypeAppMaybeRef<TCon, T, Ref> for &TCollection
 where
     TCollection: TypeApp<TCon, T>,
     TCon: WithTypeArg<T> + ?Sized,
-    T: ?Sized
+    T: ?Sized,
 {
 }

@@ -2,7 +2,6 @@ use crate::*;
 
 // Implement this trait for LinearFunctor
 pub trait LinearFunctor {
-
     fn lmap<TIn, TOut>(
         f: impl Fn(TIn) -> TOut,
         x: <Self as WithTypeArg<TIn>>::Type,
@@ -35,10 +34,13 @@ where
 
 // This is for f.lmap(x) syntax
 pub trait LMapExt {
-    fn lmap<TCon, TIn, TOut>(self, x: impl TypeApp<TCon, TIn> + Sized) -> <TCon as WithTypeArg<TOut>>::Type
+    fn lmap<TCon, TIn, TOut>(
+        self,
+        x: impl TypeApp<TCon, TIn> + Sized,
+    ) -> <TCon as WithTypeArg<TOut>>::Type
     where
         Self: Fn(TIn) -> TOut + Sized,
-        TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut>
+        TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut>,
     {
         lmap(self, x)
     }
@@ -58,7 +60,6 @@ where
     <TCon as LinearFunctor>::lmapconst::<TIn, TOut>(e, x.into_val())
 }
 
-
 // This is for x.lmapop(f) syntax
 pub trait LMapOpExt {
     fn lmapop<TCon, TIn, TOut>(self, f: impl Fn(TIn) -> TOut) -> <TCon as WithTypeArg<TOut>>::Type
@@ -74,7 +75,7 @@ pub trait LMapOpExt {
 impl<T> LMapOpExt for T {}
 
 // Implement this trait for Functor
-pub trait Functor : LinearFunctor {
+pub trait Functor: LinearFunctor {
     fn fmap<TIn, TOut>(
         f: impl Fn(&TIn) -> TOut,
         x: &<Self as WithTypeArg<TIn>>::Type,
@@ -102,7 +103,7 @@ pub fn fmap<TCon, TIn, TOut, TFunc, TParam>(
 where
     TCon: Functor + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
     TParam: TypeApp<TCon, TIn>,
-    TFunc: Fn(&TIn) -> TOut
+    TFunc: Fn(&TIn) -> TOut,
 {
     TCon::fmap(f, x.into_ref())
 }

@@ -55,7 +55,8 @@ impl Applicative for OptionTypeCon {
     where
         TFunc: Fn(&TIn1, &TIn2) -> TOut,
     {
-        x1.as_ref().and_then(|x1_val| x2.as_ref().map(|x2_val| f(x1_val, x2_val)))
+        x1.as_ref()
+            .and_then(|x1_val| x2.as_ref().map(|x2_val| f(x1_val, x2_val)))
     }
 }
 
