@@ -1,18 +1,21 @@
 pub mod applicative;
+pub mod ext;
 pub mod functor;
 pub mod impls;
-pub mod mdo;
 pub mod monad;
 pub mod typeapp;
-pub mod with_type_arg;
 
 pub use applicative::*;
+pub use ext::*;
 pub use functor::*;
 pub use impls::*;
-pub use mdo::*;
 pub use monad::*;
 pub use typeapp::*;
-pub use with_type_arg::*;
+
+#[doc(hidden)]
+pub mod mdo;
+#[doc(hidden)]
+pub use mdo::*;
 
 #[cfg(test)]
 mod tests {

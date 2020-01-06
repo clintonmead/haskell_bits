@@ -9,39 +9,23 @@ pub trait Lift {
         Self: WithTypeArg<T>;
 }
 
-// lift(x)
 pub fn lift<TCon, T>(x: T) -> <TCon as WithTypeArg<T>>::Type
 where
-    <TCon as WithTypeArg<T>>::Type : TypeApp<TCon, T>,
+    <TCon as WithTypeArg<T>>::Type: TypeApp<TCon, T>,
     TCon: Lift + WithTypeArg<T>,
 {
     <TCon as Lift>::lift::<T>(x)
 }
 
-
-// lift_c(x)
 pub fn lift_c<TCon, T, U>(x: U::Param) -> U
 where
-    T : Is<Type = U::Param>,
-    U : TypeApp<TCon, T>,
-    <TCon as WithTypeArg<T>>::Type : TypeApp<TCon, T>,
+    T: Is<Type = U::Param>,
+    U: TypeApp<TCon, T>,
+    <TCon as WithTypeArg<T>>::Type: TypeApp<TCon, T>,
     TCon: Lift + WithTypeArg<T>,
 {
     Is::from_val(lift::<TCon, T>(Is::from_val(x)))
 }
-
-// x.lift()
-pub trait LiftExt {
-    fn lift<TCon>(self) -> <TCon as WithTypeArg<Self>>::Type
-    where
-        TCon: Lift + WithTypeArg<Self>,
-        Self: Sized,
-    {
-        lift::<TCon, Self>(self)
-    }
-}
-
-impl<T> LiftExt for T {}
 
 pub trait LinearApplicative: Lift {
     fn lap<TIn, TOut, TFunc>(
@@ -65,7 +49,6 @@ pub trait LinearApplicative: Lift {
         TFunc: FnOnce(TIn1, TIn2) -> TOut;
 }
 
-// lap(f, x)
 pub fn lap<TCon, TIn, TOut, TFunc>(
     f: impl TypeApp<TCon, TFunc>,
     x: impl TypeApp<TCon, TIn>,
@@ -76,23 +59,6 @@ where
 {
     <TCon as LinearApplicative>::lap::<TIn, TOut, TFunc>(f.into_val(), x.into_val())
 }
-
-// f.lap(x)
-pub trait LApExt {
-    fn lap<TCon, TIn, TOut, TFunc>(
-        self,
-        x: impl TypeApp<TCon, TIn>,
-    ) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        Self: Sized + TypeApp<TCon, TFunc>,
-        TCon: LinearApplicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut>,
-        TFunc: Fn(TIn) -> TOut,
-    {
-        <TCon as LinearApplicative>::lap::<TIn, TOut, TFunc>(self.into_val(), x.into_val())
-    }
-}
-
-impl<T> LApExt for T {}
 
 pub fn llift2<TCon, TIn1, TIn2, TOut, TFunc>(
     f: TFunc,
@@ -144,23 +110,6 @@ where
 {
     <TCon as Applicative>::ap::<TIn, TOut, TFunc>(f.into_ref(), x.into_ref())
 }
-
-// f.ap(x)
-pub trait FApExt {
-    fn ap<TCon, TIn, TOut, TFunc>(
-        self: &Self,
-        x: &impl TypeApp<TCon, TIn>,
-    ) -> <TCon as WithTypeArg<TOut>>::Type
-    where
-        Self: TypeApp<TCon, TFunc>,
-        TCon: Applicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut>,
-        TFunc: Fn(&TIn) -> TOut,
-    {
-        <TCon as Applicative>::ap::<TIn, TOut, TFunc>(self.into_ref(), x.into_ref())
-    }
-}
-
-impl<T> FApExt for T {}
 
 pub fn lift2<TCon, TIn1, TIn2, TOut, TFunc>(
     f: TFunc,
