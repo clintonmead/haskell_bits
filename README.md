@@ -9,6 +9,7 @@ Currently this library is an implementation of the Functor/Applicative/Monad hie
 There has been some work in this space, examples are:
 
 * [`fp-core`](https://crates.io/crates/fp-core)
+* [`frunk`](https://crates.io/crates/frunk)
 * [`functional`](https://crates.io/crates/functional)
 
 ## So what makes this library different?!
