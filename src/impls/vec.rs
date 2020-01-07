@@ -66,3 +66,15 @@ impl Monad for TypeCon {
         x.iter().flat_map(f).collect()
     }
 }
+
+impl LinearMonad for TypeCon {
+    fn lbind<TIn, TOut, TFuncArg>(
+        x: <Self as WithTypeArg<TIn>>::Type,
+        f: TFuncArg,
+    ) -> <Self as WithTypeArg<TOut>>::Type
+    where
+        TFuncArg: Fn(TIn) -> <Self as WithTypeArg<TOut>>::Type,
+    {
+        x.into_iter().flat_map(f).collect()
+    }
+}

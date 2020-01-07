@@ -60,7 +60,7 @@ impl Applicative for TypeCon {
     }
 }
 
-impl LinearApplicative for TypeCon {
+impl SingletonApplicative for TypeCon {
     fn lap<TIn, TOut, TFunc>(
         f: <TypeCon as WithTypeArg<TFunc>>::Type,
         x: <TypeCon as WithTypeArg<TIn>>::Type,
@@ -92,5 +92,17 @@ impl Monad for TypeCon {
         TFuncArg: Fn(&TIn) -> <TypeCon as WithTypeArg<TOut>>::Type,
     {
         x.as_ref().and_then(f)
+    }
+}
+
+impl LinearMonad for TypeCon {
+    fn lbind<TIn, TOut, TFuncArg>(
+        x: <TypeCon as WithTypeArg<TIn>>::Type,
+        f: TFuncArg,
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type
+    where
+        TFuncArg: Fn(TIn) -> <TypeCon as WithTypeArg<TOut>>::Type,
+    {
+        x.and_then(f)
     }
 }

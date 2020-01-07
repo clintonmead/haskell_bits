@@ -2,7 +2,7 @@ use crate::*;
 use is_type::Is;
 
 // Monad
-pub trait Monad: Applicative {
+pub trait Monad: Applicative + LinearMonad {
     fn bind<TIn, TOut, TFuncArg>(
         x: &<Self as WithTypeArg<TIn>>::Type,
         f: TFuncArg,
@@ -34,23 +34,24 @@ pub trait Monad: Applicative {
 }
 
 // LinearMonad
-pub trait LinearMonad: LinearApplicative + Lift {
+pub trait LinearMonad: LinearFunctor + Lift {
     fn lbind<TIn, TOut, TFuncArg>(
         x: <Self as WithTypeArg<TIn>>::Type,
         f: TFuncArg,
     ) -> <Self as WithTypeArg<TOut>>::Type
     where
         Self: WithTypeArg<TIn> + WithTypeArg<TOut>,
-        TFuncArg: FnOnce(TIn) -> <Self as WithTypeArg<TOut>>::Type;
+        TFuncArg: Fn(TIn) -> <Self as WithTypeArg<TOut>>::Type;
 
     fn lbind_ignore<TIn, TOut>(
         x: <Self as WithTypeArg<TIn>>::Type,
-        y: <Self as WithTypeArg<TOut>>::Type,
+        y: &<Self as WithTypeArg<TOut>>::Type,
     ) -> <Self as WithTypeArg<TOut>>::Type
     where
         Self: WithTypeArg<TIn> + WithTypeArg<TOut>,
+        <Self as WithTypeArg<TOut>>::Type : Clone
     {
-        <Self as LinearMonad>::lbind::<TIn, TOut, _>(x, |_| y)
+        <Self as LinearMonad>::lbind::<TIn, TOut, _>(x, |_| Clone::clone(y))
     }
 
     fn ljoin<T>(
@@ -152,7 +153,7 @@ pub fn lbind<TCon, TIn, TOut, TFuncArg, TFuncOut>(
 ) -> <TCon as WithTypeArg<TOut>>::Type
 where
     TCon: LinearMonad + WithTypeArg<TIn> + WithTypeArg<TOut>,
-    TFuncArg: FnOnce(TIn) -> TFuncOut,
+    TFuncArg: Fn(TIn) -> TFuncOut,
     TFuncOut: TypeApp<TCon, TOut>,
 {
     <TCon as LinearMonad>::lbind::<TIn, TOut, _>(x.into_val(), |y| f(y).into_val())
@@ -161,10 +162,11 @@ where
 // lbind_ignore(x, y)
 pub fn lbind_ignore<TCon, TIn, TOut>(
     x: impl TypeApp<TCon, TIn>,
-    y: impl TypeApp<TCon, TOut>,
+    y: &impl TypeApp<TCon, TOut>,
 ) -> <TCon as WithTypeArg<TOut>>::Type
 where
     TCon: LinearMonad + WithTypeArg<TIn> + WithTypeArg<TOut>,
+    <TCon as WithTypeArg<TOut>>::Type: Clone
 {
-    <TCon as LinearMonad>::lbind_ignore::<TIn, TOut>(x.into_val(), y.into_val())
+    <TCon as LinearMonad>::lbind_ignore::<TIn, TOut>(x.into_val(), y.into_ref())
 }

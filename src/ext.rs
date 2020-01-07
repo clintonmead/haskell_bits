@@ -30,10 +30,10 @@ pub trait SizedExt: Sized {
     ) -> <TCon as WithTypeArg<TOut>>::Type
     where
         Self: TypeApp<TCon, TFunc>,
-        TCon: LinearApplicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut>,
+        TCon: SingletonApplicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut>,
         TFunc: Fn(TIn) -> TOut,
     {
-        <TCon as LinearApplicative>::lap::<TIn, TOut, TFunc>(self.into_val(), x.into_val())
+        <TCon as SingletonApplicative>::lap::<TIn, TOut, TFunc>(self.into_val(), x.into_val())
     }
 
     fn lmap<TCon, TIn, TOut>(
@@ -113,7 +113,7 @@ pub trait SizedExt: Sized {
     ) -> <TCon as WithTypeArg<TOut>>::Type
     where
         TCon: LinearMonad + WithTypeArg<TIn> + WithTypeArg<TOut>,
-        TFuncArg: FnOnce(TIn) -> TFuncOut,
+        TFuncArg: Fn(TIn) -> TFuncOut,
         TFuncOut: TypeApp<TCon, TOut>,
         Self: TypeApp<TCon, TIn>,
     {
@@ -122,11 +122,12 @@ pub trait SizedExt: Sized {
 
     fn lbind_ignore<TCon, TIn, TOut>(
         self,
-        y: impl TypeApp<TCon, TOut>,
+        y: &impl TypeApp<TCon, TOut>,
     ) -> <TCon as WithTypeArg<TOut>>::Type
     where
         Self: TypeApp<TCon, TIn>,
         TCon: LinearMonad + WithTypeArg<TIn> + WithTypeArg<TOut>,
+        <TCon as WithTypeArg<TOut>>::Type: Clone
     {
         lbind_ignore(self, y)
     }
