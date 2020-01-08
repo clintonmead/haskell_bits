@@ -13,19 +13,25 @@ impl<T> WithTypeArg<T> for TypeCon {
 }
 
 impl Functor for TypeCon {
-    fn fmap<TIn, TOut>(
-        f: impl Fn(&TIn) -> TOut,
+    fn fmap<TIn, TOut, F>(
+        f: F,
         x: &<TypeCon as WithTypeArg<TIn>>::Type,
-    ) -> <TypeCon as WithTypeArg<TOut>>::Type {
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type
+    where
+        F: Fn(&TIn) -> TOut,
+    {
         Option::map(x.as_ref(), f)
     }
 }
 
 impl LinearFunctor for TypeCon {
-    fn lmap<TIn, TOut>(
-        f: impl Fn(TIn) -> TOut,
+    fn lmap<TIn, TOut, F>(
+        f: F,
         x: <TypeCon as WithTypeArg<TIn>>::Type,
-    ) -> <TypeCon as WithTypeArg<TOut>>::Type {
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type
+    where
+        F: Fn(TIn) -> TOut,
+    {
         Option::map(x, f)
     }
 }
@@ -84,24 +90,24 @@ impl SingletonApplicative for TypeCon {
 }
 
 impl Monad for TypeCon {
-    fn bind<TIn, TOut, TFuncArg>(
+    fn fbind<TIn, TOut, F>(
         x: &<TypeCon as WithTypeArg<TIn>>::Type,
-        f: TFuncArg,
+        f: F,
     ) -> <TypeCon as WithTypeArg<TOut>>::Type
     where
-        TFuncArg: Fn(&TIn) -> <TypeCon as WithTypeArg<TOut>>::Type,
+        F: Fn(&TIn) -> <TypeCon as WithTypeArg<TOut>>::Type,
     {
         x.as_ref().and_then(f)
     }
 }
 
 impl LinearMonad for TypeCon {
-    fn lbind<TIn, TOut, TFuncArg>(
+    fn lbind<TIn, TOut, F>(
         x: <TypeCon as WithTypeArg<TIn>>::Type,
-        f: TFuncArg,
+        f: F,
     ) -> <TypeCon as WithTypeArg<TOut>>::Type
     where
-        TFuncArg: Fn(TIn) -> <TypeCon as WithTypeArg<TOut>>::Type,
+        F: Fn(TIn) -> <TypeCon as WithTypeArg<TOut>>::Type,
     {
         x.and_then(f)
     }

@@ -6,7 +6,8 @@ pub trait WithTypeArg<T: ?Sized> {
     type Type: TypeApp<Self, T>;
 }
 
-pub trait TypeApp<TCon, T>: is_type::Is<Type = <TCon as WithTypeArg<T>>::Type> + TypeAppParam
+pub trait TypeApp<TCon, T>:
+    is_type::Is<Type = <TCon as WithTypeArg<T>>::Type> + TypeAppParam
 where
     TCon: WithTypeArg<T> + ?Sized,
     T: ?Sized,

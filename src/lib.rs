@@ -54,9 +54,9 @@ mod tests {
         let o1: Option<u32> = lift_c(5);
         let o2: Option<u32> = lift_c(7);
 
-        let _o3 = bind(&o1, |x| fmap(|y| x + y, &o1));
+        let _o3 = bind(o1, |x| fmap(|y| x + y, &o1));
 
-        let _o4: Option<u32> = bind_c(&lift_c(5), |x: &_| lift_c(Clone::clone(x)));
+        let _o4: Option<u32> = fbind_c(&lift_c(5), |x: &_| lift_c(Clone::clone(x)));
         let _o5: Option<u32> = (|x: _| Some(Clone::clone(x)))(&5);
 
         let _do_result: Option<(u32, u32)> = mdo_c! {
@@ -139,7 +139,7 @@ mod tests {
         mdo! {
             x_val =<< x;
             y_val =<< y;
-            ret<TCon> (x_val.clone(), y_val.clone());
+            ret<TCon> (Clone::clone(x_val), Clone::clone(y_val));
         }
     }
 }

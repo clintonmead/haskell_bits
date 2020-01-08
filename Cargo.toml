@@ -8,4 +8,4 @@ description = "Rust implementations of various Haskell typeclasses and functions
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-is_type = "0.2"
+is_type = "0.2.1"

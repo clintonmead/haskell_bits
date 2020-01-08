@@ -18,19 +18,19 @@ macro_rules! mdo {
     (
         $p: pat =<< $e: expr ; $( $t: tt )*
     ) => (
-        bind($e, move |$p : &_| mdo! { $( $t )* } )
+        fbind($e, move |$p : &_| mdo! { $( $t )* } )
     );
 
     (
         $p: ident : $ty: ty =<< $e: expr ; $( $t: tt )*
     ) => (
-        bind($e, move |$p : &$ty| mdo! { $( $t )* } )
+        fbind($e, move |$p : &$ty| mdo! { $( $t )* } )
     );
 
     (
         ign $e: expr ; $( $t: tt )*
     ) => (
-        bind($e, move |_| mdo! { $( $t )* })
+        fbind($e, move |_| mdo! { $( $t )* })
     );
 
     (
@@ -57,19 +57,19 @@ macro_rules! mdo_c {
     (
         $p: pat =<< $e: expr ; $( $t: tt )*
     ) => (
-        bind_c($e, move |$p : &_| mdo_c! { $( $t )* } )
+        fbind_c($e, move |$p : &_| mdo_c! { $( $t )* } )
     );
 
     (
         $p: ident : $ty: ty =<< $e: expr ; $( $t: tt )*
     ) => (
-        bind_c($e, move |$p : &$ty| mdo_c! { $( $t )* } )
+        fbind_c($e, move |$p : &$ty| mdo_c! { $( $t )* } )
     );
 
     (
         ign $e: expr ; $( $t: tt )*
     ) => (
-        bind_c($e, move |_| mdo_c! { $( $t )* })
+        fbind_c($e, move |_| mdo_c! { $( $t )* })
     );
 
     (
