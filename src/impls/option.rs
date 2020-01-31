@@ -55,9 +55,9 @@ impl Applicative for TypeCon {
 
     fn lift2<TIn1, TIn2, TOut, TFunc>(
         f: TFunc,
-        x1: &<Self as WithTypeArg<TIn1>>::Type,
-        x2: &<Self as WithTypeArg<TIn2>>::Type,
-    ) -> <Self as WithTypeArg<TOut>>::Type
+        x1: &<TypeCon as WithTypeArg<TIn1>>::Type,
+        x2: &<TypeCon as WithTypeArg<TIn2>>::Type,
+    ) -> <TypeCon as WithTypeArg<TOut>>::Type
     where
         TFunc: Fn(&TIn1, &TIn2) -> TOut,
     {
@@ -66,7 +66,7 @@ impl Applicative for TypeCon {
     }
 }
 
-impl SingletonApplicative for TypeCon {
+impl LinearApplicative for TypeCon {
     fn lap<TIn, TOut, TFunc>(
         f: <TypeCon as WithTypeArg<TFunc>>::Type,
         x: <TypeCon as WithTypeArg<TIn>>::Type,
@@ -90,7 +90,7 @@ impl SingletonApplicative for TypeCon {
 }
 
 impl Monad for TypeCon {
-    fn fbind<TIn, TOut, F>(
+    fn bind<TIn, TOut, F>(
         x: &<TypeCon as WithTypeArg<TIn>>::Type,
         f: F,
     ) -> <TypeCon as WithTypeArg<TOut>>::Type
@@ -107,7 +107,7 @@ impl LinearMonad for TypeCon {
         f: F,
     ) -> <TypeCon as WithTypeArg<TOut>>::Type
     where
-        F: Fn(TIn) -> <TypeCon as WithTypeArg<TOut>>::Type,
+        F: FnOnce(TIn) -> <TypeCon as WithTypeArg<TOut>>::Type,
     {
         x.and_then(f)
     }

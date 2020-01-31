@@ -27,7 +27,7 @@ where
     Is::from_val(lift::<TCon, T>(Is::from_val(x)))
 }
 
-pub trait SingletonApplicative: Lift {
+pub trait LinearApplicative: Lift {
     fn lap<TIn, TOut, TFunc>(
         f: <Self as WithTypeArg<TFunc>>::Type,
         x: <Self as WithTypeArg<TIn>>::Type,
@@ -36,7 +36,7 @@ pub trait SingletonApplicative: Lift {
         Self: WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut>,
         TFunc: FnOnce(TIn) -> TOut,
     {
-        <Self as SingletonApplicative>::llift2(|y1: TFunc, y2: TIn| y1(y2), f, x)
+        <Self as LinearApplicative>::llift2(|y1: TFunc, y2: TIn| y1(y2), f, x)
     }
 
     fn llift2<TIn1, TIn2, TOut, TFunc>(
@@ -54,12 +54,12 @@ pub fn lap<TCon, TIn, TOut, TFunc, F, X>(
     x: X,
 ) -> <TCon as WithTypeArg<TOut>>::Type
 where
-    TCon: SingletonApplicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
+    TCon: LinearApplicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
     TFunc: Fn(TIn) -> TOut,
     F: TypeApp<TCon, TFunc>,
     X: TypeApp<TCon, TIn>,
 {
-    <TCon as SingletonApplicative>::lap::<TIn, TOut, TFunc>(f.into_val(), x.into_val())
+    <TCon as LinearApplicative>::lap::<TIn, TOut, TFunc>(f.into_val(), x.into_val())
 }
 
 pub fn llift2<TCon, TIn1, TIn2, TOut, F, X1, X2>(
@@ -68,7 +68,7 @@ pub fn llift2<TCon, TIn1, TIn2, TOut, F, X1, X2>(
     x2: X2,
 ) -> <TCon as WithTypeArg<TOut>>::Type
 where
-    TCon: SingletonApplicative
+    TCon: LinearApplicative
         + WithTypeArg<TIn1>
         + WithTypeArg<TIn2>
         + WithTypeArg<TOut>
@@ -78,7 +78,7 @@ where
     X1: TypeApp<TCon, TIn1>,
     X2: TypeApp<TCon, TIn2>
 {
-    <TCon as SingletonApplicative>::llift2(f, x1.into_val(), x2.into_val())
+    <TCon as LinearApplicative>::llift2(f, x1.into_val(), x2.into_val())
 }
 
 pub trait Applicative: Functor + Lift {

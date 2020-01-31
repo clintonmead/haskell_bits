@@ -14,24 +14,24 @@ pub trait UnsizedExt {
         ap(self, x)
     }
 
-    fn fbind<TCon, TIn, TOut, F, TResult>(&self, f: F) -> TResult
+    fn bind<TCon, TIn, TOut, F, TResult>(&self, f: F) -> TResult
     where
         TCon: Monad + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
         F: Fn(&TIn) -> TResult,
         TResult: TypeApp<TCon, TOut>,
         Self: TypeApp<TCon, TIn>,
     {
-        fbind(self, f)
+        bind(self, f)
     }
 
-    fn fbind_ignore<TCon, TIn, TOut, TResult>(&self, y: &TResult) -> TResult
+    fn bind_ignore<TCon, TIn, TOut, TResult>(&self, y: &TResult) -> TResult
     where
         TCon: Monad + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
         Self: TypeApp<TCon, TIn>,
         TResult: TypeApp<TCon, TOut>,
         <TCon as WithTypeArg<TOut>>::Type: Clone,
     {
-        fbind_ignore(self, y)
+        bind_ignore(self, y)
     }
 
     fn fjoin<TCon, T, TInner>(&self) -> <TCon as WithTypeArg<T>>::Type
@@ -64,7 +64,7 @@ pub trait SizedExt: Sized {
         x: X,
     ) -> <TCon as WithTypeArg<TOut>>::Type
     where
-        TCon: SingletonApplicative
+        TCon: LinearApplicative
             + WithTypeArg<TFunc>
             + WithTypeArg<TIn>
             + WithTypeArg<TOut>
@@ -73,7 +73,7 @@ pub trait SizedExt: Sized {
         TFunc: Fn(TIn) -> TOut,
         X: TypeApp<TCon, TIn>,
     {
-        <TCon as SingletonApplicative>::lap::<TIn, TOut, TFunc>(self.into_val(), x.into_val())
+        <TCon as LinearApplicative>::lap::<TIn, TOut, TFunc>(self.into_val(), x.into_val())
     }
 
     fn lmap<TCon, TIn, TOut, X>(

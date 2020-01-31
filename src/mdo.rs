@@ -18,19 +18,19 @@ macro_rules! mdo {
     (
         $p: pat =<< $e: expr ; $( $t: tt )*
     ) => (
-        fbind($e, move |$p : &_| mdo! { $( $t )* } )
+        bind($e, move |$p : &_| mdo! { $( $t )* } )
     );
 
     (
         $p: ident : $ty: ty =<< $e: expr ; $( $t: tt )*
     ) => (
-        fbind($e, move |$p : &$ty| mdo! { $( $t )* } )
+        bind($e, move |$p : &$ty| mdo! { $( $t )* } )
     );
 
     (
         ign $e: expr ; $( $t: tt )*
     ) => (
-        fbind($e, move |_| mdo! { $( $t )* })
+        bind($e, move |_| mdo! { $( $t )* })
     );
 
     (
@@ -57,19 +57,19 @@ macro_rules! mdo_c {
     (
         $p: pat =<< $e: expr ; $( $t: tt )*
     ) => (
-        fbind_c($e, move |$p : &_| mdo_c! { $( $t )* } )
+        bind($e, move |$p : &_| mdo_c! { $( $t )* } )
     );
 
     (
         $p: ident : $ty: ty =<< $e: expr ; $( $t: tt )*
     ) => (
-        fbind_c($e, move |$p : &$ty| mdo_c! { $( $t )* } )
+        bind($e, move |$p : &$ty| mdo_c! { $( $t )* } )
     );
 
     (
         ign $e: expr ; $( $t: tt )*
     ) => (
-        fbind_c($e, move |_| mdo_c! { $( $t )* })
+        bind($e, move |_| mdo_c! { $( $t )* })
     );
 
     (
@@ -82,5 +82,44 @@ macro_rules! mdo_c {
         ret $e: expr ;
     ) => (
         lift_c($e)
+    );
+}
+
+#[macro_export]
+macro_rules! ldo {
+    (
+        let $p: pat = $e: expr ; $( $t: tt )*
+    ) => (
+        { let $p = $e ; ldo! { $( $t )* } }
+    );
+
+    (
+        let $p: ident : $ty: ty = $e: expr ; $( $t: tt )*
+    ) => (
+        { let $p: $ty = $e ; ldo! { $( $t )* } }
+    );
+
+    (
+        $p: pat =<< $e: expr ; $( $t: tt )*
+    ) => (
+        lbind($e, move |$p| ldo! { $( $t )* } )
+    );
+
+    (
+        $p: ident : $ty: ty =<< $e: expr ; $( $t: tt )*
+    ) => (
+        lbind($e, move |$p : $ty| ldo! { $( $t )* } )
+    );
+
+    (
+        ign $e: expr ; $( $t: tt )*
+    ) => (
+        lbind($e, move |_| ldo! { $( $t )* })
+    );
+
+    (
+        ret<$ty: ty> $e: expr ;
+    ) => (
+        lift::<$ty, _>($e)
     );
 }

@@ -62,7 +62,7 @@ impl Applicative for TypeCon {
 }
 
 impl Monad for TypeCon {
-    fn fbind<TIn, TOut, F>(
+    fn bind<TIn, TOut, F>(
         x: &<Self as WithTypeArg<TIn>>::Type,
         f: F,
     ) -> <Self as WithTypeArg<TOut>>::Type
@@ -70,17 +70,5 @@ impl Monad for TypeCon {
         F: Fn(&TIn) -> <Self as WithTypeArg<TOut>>::Type,
     {
         x.iter().flat_map(f).collect()
-    }
-}
-
-impl LinearMonad for TypeCon {
-    fn lbind<TIn, TOut, F>(
-        x: <Self as WithTypeArg<TIn>>::Type,
-        f: F,
-    ) -> <Self as WithTypeArg<TOut>>::Type
-    where
-        F: Fn(TIn) -> <Self as WithTypeArg<TOut>>::Type,
-    {
-        x.into_iter().flat_map(f).collect()
     }
 }
