@@ -72,3 +72,38 @@ impl Monad for TypeCon {
         x.iter().flat_map(f).collect()
     }
 }
+
+impl LinearFoldable for TypeCon {
+    fn lfoldr<F, TIn, TOut>(f: F, init: TOut, x: <Self as WithTypeArg<TIn>>::Type) -> TOut
+    where
+        F: Fn(TIn, TOut) -> TOut,
+    {
+        x.into_iter().fold(init, |acc, next_val| f(next_val, acc))
+    }
+}
+
+impl Foldable for TypeCon {
+    fn foldr<F, TIn, TOut>(f: F, init: TOut, x: &<Self as WithTypeArg<TIn>>::Type) -> TOut
+    where
+        F: Fn(&TIn, TOut) -> TOut,
+    {
+        x.into_iter().fold(init, |acc, next_val| f(next_val, acc))
+    }
+}
+/*
+impl LinearTraversable for TypeCon {
+    fn sequence<TApplicative, T>(
+        x: <Self as WithTypeArg<<TApplicative as WithTypeArg<T>>::Type>>::Type,
+    ) -> <TApplicative as WithTypeArg<<Self as WithTypeArg<T>>::Type>>::Type
+    where
+        TApplicative:
+            LinearApplicative + WithTypeArg<T> + WithTypeArg<<Self as WithTypeArg<T>>::Type>,
+        Self: WithTypeArg<T> + WithTypeArg<<TApplicative as WithTypeArg<T>>::Type> {
+            let init = lift::<TApplicative, Vec<T>>(vec!());
+            lfoldr(|x:Vec<T>, ys| llift2(|a, b| pure_append(a,b), x, ys), lift(vec!()), x)
+        }}
+fn pure_append<T>(elem: T, mut vec: Vec<T>) -> Vec<T> {
+    vec.push(elem);
+    vec
+}
+*/

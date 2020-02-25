@@ -1,7 +1,7 @@
 [package]
 name = "haskell_bits"
 version = "0.3.0"
-authors = ["Clinton <clintonmead@gmail.com>"]
+authors = ["Clinton Mead <clintonmead@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/clintonmead/haskell_bits"
 description = "Rust implementations of various Haskell typeclasses and functions"

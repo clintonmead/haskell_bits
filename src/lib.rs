@@ -4,6 +4,10 @@ pub mod functor;
 pub mod impls;
 pub mod monad;
 pub mod typeapp;
+pub mod semigroup;
+pub mod monoid;
+pub mod foldable;
+pub mod traversable;
 
 pub use applicative::*;
 pub use ext::*;
@@ -11,6 +15,10 @@ pub use functor::*;
 pub use impls::*;
 pub use monad::*;
 pub use typeapp::*;
+pub use semigroup::*;
+pub use monoid::*;
+pub use foldable::*;
+pub use traversable::*;
 
 #[doc(hidden)]
 pub mod mdo;
@@ -117,6 +125,18 @@ mod tests {
         TIn: Clone,
     {
         map(g, map(f, x))
+    }
+
+    fn lmap2<TIn, TMid, TOut, TCon>(
+        f: impl Fn(TIn) -> TMid,
+        g: impl Fn(TMid) -> TOut,
+        x: impl TypeApp<TCon, TIn>,
+    ) -> <TCon as WithTypeArg<TOut>>::Type
+    where
+        TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TMid> + WithTypeArg<TOut>,
+        TIn: Clone,
+    {
+        lmap(g, lmap(f, x))
     }
 
     fn _lmap2<TIn, TMid, TOut, TCon>(

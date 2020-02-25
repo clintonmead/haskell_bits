@@ -112,3 +112,21 @@ impl LinearMonad for TypeCon {
         x.and_then(f)
     }
 }
+
+impl LinearFoldable for TypeCon {
+    fn lfoldr<F, TIn, TOut>(f: F, init: TOut, x: <Self as WithTypeArg<TIn>>::Type) -> TOut
+    where
+        F: Fn(TIn, TOut) -> TOut,
+    {
+        x.into_iter().fold(init, |acc, next_val| f(next_val, acc))
+    }
+}
+
+impl Foldable for TypeCon {
+    fn foldr<F, TIn, TOut>(f: F, init: TOut, x: &<Self as WithTypeArg<TIn>>::Type) -> TOut
+    where
+        F: Fn(&TIn, TOut) -> TOut,
+    {
+        x.into_iter().fold(init, |acc, next_val| f(next_val, acc))
+    }
+}

@@ -1,10 +1,7 @@
 use crate::*;
 
 pub trait UnsizedExt {
-    fn ap<TCon, TIn, TOut, TFunc, X>(
-        &self,
-        x: &X
-    ) -> <TCon as WithTypeArg<TOut>>::Type
+    fn ap<TCon, TIn, TOut, TFunc, X>(&self, x: &X) -> <TCon as WithTypeArg<TOut>>::Type
     where
         Self: TypeApp<TCon, TFunc>,
         TCon: Applicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut>,
@@ -47,9 +44,16 @@ pub trait UnsizedExt {
     {
         fjoin(self)
     }
-}
 
-impl<T> UnsizedExt for T {}
+    fn foldr<TCon, F, TIn, TOut>(&self, init: TOut, f: F) -> TOut
+    where
+        F: Fn(&TIn, TOut) -> TOut,
+        TCon: Foldable + WithTypeArg<TIn>,
+        Self: TypeApp<TCon, TIn>,
+    {
+        foldr(f, init, self)
+    }
+}
 
 pub trait SizedExt: Sized {
     fn lift<TCon>(self) -> <TCon as WithTypeArg<Self>>::Type
@@ -59,16 +63,10 @@ pub trait SizedExt: Sized {
         lift::<TCon, Self>(self)
     }
 
-    fn lap<TCon, TIn, TOut, TFunc, X>(
-        self,
-        x: X,
-    ) -> <TCon as WithTypeArg<TOut>>::Type
+    fn lap<TCon, TIn, TOut, TFunc, X>(self, x: X) -> <TCon as WithTypeArg<TOut>>::Type
     where
-        TCon: LinearApplicative
-            + WithTypeArg<TFunc>
-            + WithTypeArg<TIn>
-            + WithTypeArg<TOut>
-            + ?Sized,
+        TCon:
+            LinearApplicative + WithTypeArg<TFunc> + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
         Self: TypeApp<TCon, TFunc>,
         TFunc: Fn(TIn) -> TOut,
         X: TypeApp<TCon, TIn>,
@@ -76,14 +74,11 @@ pub trait SizedExt: Sized {
         <TCon as LinearApplicative>::lap::<TIn, TOut, TFunc>(self.into_val(), x.into_val())
     }
 
-    fn lmap<TCon, TIn, TOut, X>(
-        self,
-        x: X,
-    ) -> <TCon as WithTypeArg<TOut>>::Type
+    fn lmap<TCon, TIn, TOut, X>(self, x: X) -> <TCon as WithTypeArg<TOut>>::Type
     where
         TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
         Self: Fn(TIn) -> TOut,
-        X: TypeApp<TCon, TIn> 
+        X: TypeApp<TCon, TIn>,
     {
         lmap(self, x)
     }
@@ -92,7 +87,7 @@ pub trait SizedExt: Sized {
     where
         TCon: LinearFunctor + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
         Self: TypeApp<TCon, TIn>,
-        F: Fn(TIn) -> TOut
+        F: Fn(TIn) -> TOut,
     {
         lmap(f, self)
     }
@@ -101,7 +96,7 @@ pub trait SizedExt: Sized {
     where
         TCon: Functor + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
         Self: Fn(&TIn) -> TOut,
-        X: TypeApp<TCon, TIn> + ?Sized
+        X: TypeApp<TCon, TIn> + ?Sized,
     {
         fmap(self, x)
     }
@@ -110,7 +105,7 @@ pub trait SizedExt: Sized {
     where
         TCon: Functor + WithTypeArg<TIn> + WithTypeArg<TOut> + ?Sized,
         Self: TypeApp<TCon, TIn>,
-        F: Fn(&TIn) -> TOut
+        F: Fn(&TIn) -> TOut,
     {
         fmap(f, self)
     }
@@ -135,5 +130,7 @@ pub trait SizedExt: Sized {
         lbind_ignore(self, y)
     }
 }
+
+impl<T> UnsizedExt for T {}
 
 impl<T: Sized> SizedExt for T {}
